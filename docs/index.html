@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWriter マニュアル</title>
+<meta name="description" content="文字を打つ場面を撮るための macOS 用エディタ AWriter の使い方。台本の書き方、再生、キー表示、画面録画までひととおり。">
+<meta property="og:title" content="AWriter マニュアル">
+<meta property="og:description" content="文字を打つ場面を撮るための macOS 用エディタ。台本を書いて再生すれば、打ち間違いなしで何度でも同じ芝居が撮れます。">
+<meta property="og:image" content="assets/poster.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="rail" aria-label="目次(常時表示)">
+  <ol>
+    <li><a href="#about">AWriter とは</a></li>
+    <li><a href="#install">インストール</a></li>
+    <li><a href="#windows">画面の構成</a></li>
+    <li><a href="#typography">文字組みを整える</a></li>
+    <li><a href="#script">台本を書く</a></li>
+    <li><a href="#play">再生する</a></li>
+    <li><a href="#keycast">キー入力を見せる</a></li>
+    <li><a href="#record">録画する</a></li>
+    <li><a href="#tips">撮影のこつ</a></li>
+    <li><a href="#shortcuts">ショートカット</a></li>
+    <li><a href="#trouble">困ったとき</a></li>
+  </ol>
+</nav>
+
+<div class="page">
+
+  <header class="masthead">
+    <img class="mark" src="assets/icon.png" width="72" height="72" alt="" aria-hidden="true">
+    <h1>AWriter</h1>
+    <p class="tagline">打ち間違えない役者。</p>
+    <p class="lede">文字を打つ場面を撮るための macOS 用エディタです。打たせたい内容を台本に書いて再生すると、本物の日本語入力を通してそのとおりにタイプします。このページはその使い方をひととおり説明するマニュアルです。</p>
+    <p class="meta">
+      <a href="https://github.com/TetsuakiBaba/awriter/releases/latest">ダウンロード</a>
+      <a href="https://github.com/TetsuakiBaba/awriter">GitHub</a>
+      <a href="#install">はじめかた</a>
+    </p>
+  </header>
+
+  <figure class="hero">
+    <video src="assets/teaser.mp4" poster="assets/poster.jpg"
+           autoplay muted loop playsinline controls
+           width="1440" height="810"
+           aria-label="AWriter が台本どおりに日本語を打っていく様子"></video>
+    <figcaption>台本を再生しているところ。変換中の下線も候補の確定も、macOS の日本語入力が実際に行っています。</figcaption>
+  </figure>
+
+  <nav class="toc" aria-label="目次">
+    <ol>
+      <li><span class="num">01</span><a href="#about">AWriter とは</a></li>
+      <li><span class="num">02</span><a href="#install">インストール</a></li>
+      <li><span class="num">03</span><a href="#windows">画面の構成</a></li>
+      <li><span class="num">04</span><a href="#typography">文字組みを整える</a></li>
+      <li><span class="num">05</span><a href="#script">台本を書く</a></li>
+      <li><span class="num">06</span><a href="#play">再生する</a></li>
+      <li><span class="num">07</span><a href="#keycast">キー入力を見せる</a></li>
+      <li><span class="num">08</span><a href="#record">録画する</a></li>
+      <li><span class="num">09</span><a href="#tips">撮影のこつ</a></li>
+      <li><span class="num">10</span><a href="#shortcuts">ショートカット</a></li>
+      <li><span class="num">11</span><a href="#trouble">困ったとき</a></li>
+    </ol>
+  </nav>
+
+  <!-- 01 ─────────────────────────────────────── -->
+  <section id="about">
+    <h2><span class="num">01</span>AWriter とは</h2>
+
+    <p>映像のなかに、誰かが文字を打っている画面が必要になることがあります。製品のデモ、操作を説明するチュートリアル、劇中でノートパソコンに向かう一場面。</p>
+
+    <p>いざ撮ろうとすると、これが厄介です。打ち間違える。変換が思ったところで確定しない。緊張して指が止まる。AWriter は、その一点のためだけに作った macOS 用エディタです。<strong>書くための道具ではありません。</strong></p>
+
+    <ul class="plain">
+      <li>押すキーを台本に書いておくと、そのとおりに打ちます。打鍵の間隔にはゆらぎが入るので、機械が吐き出しているようには見えません</li>
+      <li>かなを漢字に変えているのは macOS の日本語入力そのものです。未確定の下線も候補ウィンドウも、画面に映るのは本物です</li>
+      <li>「再生前に本文を消去」で頭から撮り直せます。カメラの位置を変えても同じ芝居が返ってきます</li>
+      <li>書類の管理をしません。保存の確認も、編集済みの表示も出ません。ウィンドウの名前は自由に決められ、空にすればタイトルは出ません</li>
+      <li>カーソルも変換中の下線も選択範囲も無彩色です。アプリ由来の色味が絵に入りません</li>
+      <li>書類ウィンドウだけを mp4 に録画できます。背景を敷いて余白付きで浮かせる絵も、アプリの中で作れます</li>
+    </ul>
+
+    <div class="note">
+      <p>アクセシビリティの許可は要りません。AWriter は自分自身のイベントキューにキーイベントを送っているだけで、他のアプリを操作することはできません。</p>
+    </div>
+  </section>
+
+  <!-- 02 ─────────────────────────────────────── -->
+  <section id="install">
+    <h2><span class="num">02</span>インストール</h2>
+
+    <p>配布は GitHub Releases です。Developer ID で署名し、Apple の公証を通してあるので、ダウンロードしたものをそのまま開けます。右クリックから開くような回避操作は要りません。</p>
+
+    <ol class="steps">
+      <li><a href="https://github.com/TetsuakiBaba/awriter/releases/latest">最新のリリース</a>から <code>AWriter-<var>バージョン</var>.dmg</code> をダウンロードします。</li>
+      <li>dmg を開き、<strong>AWriter.app</strong> を「アプリケーション」フォルダへドラッグします。</li>
+      <li>アプリケーションフォルダから AWriter を起動します。起動すると<strong>エディタウィンドウと台本エディタが一緒に開きます</strong>。</li>
+    </ol>
+
+    <h3>動作環境</h3>
+    <ul class="plain">
+      <li>macOS 14 以降</li>
+      <li>Apple シリコン / Intel の両方で動くユニバーサルバイナリ</li>
+      <li>日本語を打たせるなら、macOS 標準の日本語入力(「日本語 - ローマ字入力」)を入力ソースに入れておきます</li>
+    </ul>
+
+    <h3>画面収録の許可</h3>
+    <p>録画機能を初めて使うときだけ、macOS が「画面収録」の許可を求めます。</p>
+    <div class="note">
+      <p><strong>許可したあとは AWriter を一度終了して、起動し直してください。</strong>許可はプロセスの起動時に読まれるため、許可した直後のプロセスには反映されません。未許可のまま録画しようとすると、システム設定の該当ペインを開く案内が出ます。</p>
+    </div>
+  </section>
+
+  <!-- 03 ─────────────────────────────────────── -->
+  <section id="windows">
+    <h2><span class="num">03</span>画面の構成</h2>
+
+    <p>ウィンドウは二つだけです。<strong>撮影に映るのは書類ウィンドウ</strong>、<strong>操作するのは台本エディタ</strong>、という役割分担になっています。</p>
+
+    <h3>書類ウィンドウ(映る側)</h3>
+
+    <figure>
+      <svg viewBox="0 0 1290 1020" role="img" aria-label="書類ウィンドウの各部">
+        <defs><clipPath id="win"><rect x="0" y="0" width="1290" height="1020" rx="18"/></clipPath></defs>
+        <image href="assets/editor.png" x="0" y="0" width="1290" height="1020" clip-path="url(#win)"/>
+        <rect x="0.5" y="0.5" width="1289" height="1019" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.18"/>
+        <g fill="#1c1c1e" font-family="ui-sans-serif, system-ui, sans-serif" font-size="19" font-weight="600" text-anchor="middle">
+          <circle cx="860" cy="40" r="17"/><text x="860" y="47" fill="#fcfbf8">1</text>
+          <circle cx="1160" cy="112" r="17"/><text x="1160" y="119" fill="#fcfbf8">2</text>
+          <circle cx="58" cy="300" r="17"/><text x="58" y="307" fill="#fcfbf8">3</text>
+          <circle cx="700" cy="660" r="17"/><text x="700" y="667" fill="#fcfbf8">4</text>
+          <circle cx="1150" cy="940" r="17"/><text x="1150" y="947" fill="#fcfbf8">5</text>
+        </g>
+        <g stroke="#1c1c1e" stroke-width="1.5" opacity="0.45" fill="none">
+          <path d="M700 643 V 625"/>
+          <path d="M1163 926 L 1190 900"/>
+          <path d="M1177 100 L 1222 62"/>
+        </g>
+      </svg>
+      <figcaption>書類ウィンドウ。台本の再生中に撮影した実際の画面です。</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>1</td><td>タイトルバー。名前は台本エディタの「ウィンドウ名」で決めます。空にすれば何も出ません</td></tr>
+          <tr><td>2</td><td>「あぁ」ボタン。フォント・文字サイズ・文字色・外観の設定がここにまとまっています</td></tr>
+          <tr><td>3</td><td>本文カラム。ウィンドウをどれだけ広げても最大 720pt で、つねに中央に置かれます</td></tr>
+          <tr><td>4</td><td>変換中の下線。macOS の日本語入力が引いている本物です</td></tr>
+          <tr><td>5</td><td>文字数カウンタ。書類ウィンドウの一部なので、録画にも映ります</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>台本エディタ(操作する側)</h3>
+
+    <p>アプリ起動時に一緒に開きます。閉じてしまったら <strong>デモ &gt; 台本エディタ…</strong>(<kbd>⌥⌘P</kbd>)で開き直せます。</p>
+
+    <figure>
+      <svg viewBox="0 0 930 570" role="img" aria-label="台本エディタの各部の模式図">
+        <g fill="none" stroke="currentColor" stroke-opacity="0.28">
+          <rect x="20" y="20" width="860" height="530" rx="10"/>
+          <path d="M20 76 H880 M20 122 H880 M20 172 H880 M20 470 H880"/>
+        </g>
+        <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">
+          <!-- controlBar -->
+          <g fill="none" stroke="currentColor" stroke-opacity="0.35">
+            <rect x="38" y="36" width="66" height="24" rx="6"/>
+            <rect x="112" y="36" width="112" height="24" rx="6"/>
+            <rect x="238" y="42" width="12" height="12" rx="3"/>
+            <rect x="448" y="36" width="118" height="24" rx="5"/>
+            <rect x="596" y="36" width="72" height="24" rx="6"/>
+            <rect x="676" y="36" width="72" height="24" rx="6"/>
+            <rect x="756" y="36" width="110" height="24" rx="6"/>
+          </g>
+          <text x="71" y="53" text-anchor="middle">▶ 再生</text>
+          <text x="168" y="53" text-anchor="middle">● 録画して再生</text>
+          <text x="258" y="53">再生前に本文を消去</text>
+          <text x="440" y="53" text-anchor="end" fill-opacity="0.6">ウィンドウ名</text>
+          <text x="458" y="53" fill-opacity="0.45">(なし)</text>
+          <text x="632" y="53" text-anchor="middle">キー表示</text>
+          <text x="712" y="53" text-anchor="middle">録画設定</text>
+          <text x="811" y="53" text-anchor="middle" font-size="10.5">インポート / 書き出し</text>
+
+          <!-- tabStrip -->
+          <g fill="none" stroke="currentColor" stroke-opacity="0.35">
+            <rect x="38" y="87" width="96" height="24" rx="6" fill="currentColor" fill-opacity="0.07"/>
+            <rect x="142" y="87" width="96" height="24" rx="6"/>
+            <rect x="246" y="87" width="26" height="24" rx="6"/>
+          </g>
+          <text x="86" y="104" text-anchor="middle">シーン 1 ×</text>
+          <text x="190" y="104" text-anchor="middle" fill-opacity="0.6">シーン 2 ×</text>
+          <text x="259" y="104" text-anchor="middle">+</text>
+
+          <!-- tokenBar -->
+          <g fill="none" stroke="currentColor" stroke-opacity="0.3" font-family="ui-monospace, Menlo, monospace">
+            <rect x="38" y="134" width="64" height="24" rx="6"/>
+            <rect x="110" y="134" width="64" height="24" rx="6"/>
+            <rect x="182" y="134" width="52" height="24" rx="6"/>
+            <rect x="242" y="134" width="44" height="24" rx="6"/>
+            <rect x="294" y="134" width="52" height="24" rx="6"/>
+            <rect x="354" y="134" width="52" height="24" rx="6"/>
+            <rect x="414" y="134" width="80" height="24" rx="6"/>
+            <rect x="502" y="134" width="72" height="24" rx="6"/>
+          </g>
+          <g font-family="ui-monospace, Menlo, monospace" font-size="11" text-anchor="middle">
+            <text x="70" y="150">{enter}</text><text x="142" y="150">{space}</text>
+            <text x="208" y="150">{tab}</text><text x="264" y="150">{bs}</text>
+            <text x="320" y="150">{kana}</text><text x="380" y="150">{eisu}</text>
+            <text x="454" y="150">{wait 0.5}</text><text x="538" y="150">{cmd+n}</text>
+          </g>
+
+          <!-- script text -->
+          <g font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill-opacity="0.75">
+            <text x="42" y="200" fill-opacity="0.45"># 冒頭のカット</text>
+            <text x="42" y="224">#lead 3</text>
+            <text x="42" y="248">#interval 100</text>
+            <text x="42" y="272">#jitter 0.35</text>
+            <text x="42" y="320">{kana}{wait 0.5}</text>
+            <text x="42" y="344">yamamichiwonoborinagara,{space}{enter}</text>
+            <text x="42" y="368">{wait 0.8}{enter}</text>
+            <text x="42" y="392">chinihatarakebakadogatatu.{space}{enter}</text>
+          </g>
+
+          <!-- referenceFooter -->
+          <g font-size="11" fill-opacity="0.55">
+            <text x="42" y="494">ディレクティブ(行頭)</text>
+            <text x="42" y="512">#lead 3 … 開始までの秒数</text>
+            <text x="42" y="530">#interval 100 … キー間隔 ms</text>
+            <text x="330" y="494">組み合わせ</text>
+            <text x="330" y="512">{cmd+n} {cmd+s} {cmd+a}</text>
+            <text x="330" y="530">{shift+enter} {cmd+shift+z}</text>
+            <text x="620" y="494">ルール</text>
+            <text x="620" y="512">通常の文字は 1 打鍵ずつ送信</text>
+            <text x="620" y="530">生の改行はキーを送らない</text>
+          </g>
+        </g>
+        <g fill="currentColor" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+          <circle cx="893" cy="48" r="13" fill="currentColor"/><text x="893" y="52" fill="var(--paper)">A</text>
+          <circle cx="893" cy="99" r="13"/><text x="893" y="103" fill="var(--paper)">B</text>
+          <circle cx="893" cy="146" r="13"/><text x="893" y="150" fill="var(--paper)">C</text>
+          <circle cx="893" cy="300" r="13"/><text x="893" y="304" fill="var(--paper)">D</text>
+          <circle cx="893" cy="510" r="13"/><text x="893" y="514" fill="var(--paper)">E</text>
+        </g>
+      </svg>
+      <figcaption>台本エディタの模式図。上から順に、操作・タブ・トークン・台本本文・記法の早見表。</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>A</td><td>再生と録画、「再生前に本文を消去」、ウィンドウ名、キー表示・録画設定、台本の読み書き</td></tr>
+          <tr><td>B</td><td>台本のタブ。<code>+</code> で追加、ダブルクリックで名前を変更、<code>×</code> で削除</td></tr>
+          <tr><td>C</td><td>トークンのボタン。押すとカーソル位置に挿入されます</td></tr>
+          <tr><td>D</td><td>台本の本文。等幅で表示され、アプリ内に自動保存されます</td></tr>
+          <tr><td>E</td><td>記法の早見表。書き方を忘れてもここを見れば済みます</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 ─────────────────────────────────────── -->
+  <section id="typography">
+    <h2><span class="num">04</span>文字組みを整える</h2>
+
+    <p>映像に映る以上、文字そのものが商品です。設定は書類ウィンドウ右上の<strong>「あぁ」</strong>ボタンにまとまっています。項目は四つだけです。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>項目</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>フォント</td><td>ヒラギノ明朝(既定)/ 凸版文久明朝 / 游明朝体 / ヒラギノ角ゴシック / 凸版文久ゴシック / ヒラギノ丸ゴ / 筑紫A丸ゴシック / クレー / システムフォント / New York。お使いの Mac に入っているものだけが並びます</td></tr>
+          <tr><td>文字サイズ</td><td>12〜36pt。行送りは 1.7 倍、段落後のアキは 0.4em で、サイズに追従します</td></tr>
+          <tr><td>文字色</td><td>自動(ライト / ダークに追従)、墨・煤竹・紺青・海老茶・千歳緑・胡粉の和色、任意のカスタムカラー</td></tr>
+          <tr><td>外観</td><td>システム / ライト / ダーク。撮影の途中でシステム設定が切り替わって地の色が変わる事故を防げます</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <p><strong>文字色を「自動」以外にしたら、外観もライトかダークに固定してください。</strong>暗い地に墨色を置くと読めなくなります。</p>
+    </div>
+
+    <p>設定はアプリ内に保存され、次に起動したときも同じ状態で始まります。本文も同じように保存されるので、書きかけがそのまま残ります。</p>
+  </section>
+
+  <!-- 05 ─────────────────────────────────────── -->
+  <section id="script">
+    <h2><span class="num">05</span>台本を書く</h2>
+
+    <p>台本は<strong>押すキーをそのまま並べたもの</strong>です。文章を書くのではなく、キーボードでどう打つかを書きます。ローマ字の並び、変換のためのスペース、候補の選択、確定の <code>{enter}</code>。ローマ字からかな、かなから漢字への変換は AWriter ではなく IME が行うので、台本には「どのキーを押したか」だけを書きます。</p>
+
+    <pre><code># 冒頭のカット(夏目漱石『草枕』)
+#lead 3
+#interval 100
+#jitter 0.35
+
+{kana}{wait 0.5}
+yamamichiwonoborinagara,koukangaeta.{space}{enter}
+{wait 0.8}
+{enter}
+chinihatarakebakadogatatu.{space}{enter}</code></pre>
+
+    <h3>ディレクティブ</h3>
+    <p>行頭に <code>#</code> で書きます。台本全体にかかる設定です。<code>#</code> で始まるその他の行はコメントとして無視されます。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>書き方</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td><code>#lead 3</code></td><td>再生を押してから打ち始めるまでの秒数。カメラを回す間</td></tr>
+          <tr><td><code>#interval 100</code></td><td>基本のキー間隔(ミリ秒)。小さいほど速く打ちます</td></tr>
+          <tr><td><code>#jitter 0.35</code></td><td>間隔のゆらぎ率。人間らしいリズムになります。0 で機械的に等間隔</td></tr>
+          <tr><td><code>#speed 1.0</code></td><td>全体の速度倍率。台本を書き直さずに尺を詰められます</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>トークン</h3>
+    <p>特殊なキーは波括弧で書きます。台本エディタのボタンからも挿入できます。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>トークン</th><th>押されるキー</th></tr></thead>
+        <tbody>
+          <tr><td><code>{enter}</code></td><td>Return。変換の確定、または改行</td></tr>
+          <tr><td><code>{space}</code></td><td>スペース。かなの変換、候補送り</td></tr>
+          <tr><td><code>{tab}</code> <code>{esc}</code> <code>{bs}</code></td><td>Tab / Escape / Delete(1 文字削除)</td></tr>
+          <tr><td><code>{up}</code> <code>{down}</code> <code>{left}</code> <code>{right}</code></td><td>矢印キー。候補の選択や文節の切り直しに</td></tr>
+          <tr><td><code>{kana}</code> <code>{eisu}</code></td><td>かなキー / 英数キー。入力モードの切り替え</td></tr>
+          <tr><td><code>{wait 0.5}</code></td><td>0.5 秒待つ。間を作る</td></tr>
+          <tr><td><code>{cmd+n}</code> <code>{shift+enter}</code> <code>{cmd+shift+z}</code></td><td>修飾キーの組み合わせ。<code>cmd</code> <code>shift</code> <code>ctrl</code> <code>opt</code> を <code>+</code> でつなぎます</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>書くときのきまりごと</h3>
+    <ul class="plain">
+      <li>通常の文字は 1 打鍵ずつ送られます。<code>yama</code> と書けば y・a・m・a の 4 打です</li>
+      <li><strong>台本の生の改行はキーを送りません。</strong>読みやすさのために好きなところで折り返せます。改行させたいときは <code>{enter}</code> と明示します</li>
+      <li>日本語を打たせるなら、先頭で <code>{kana}</code> を送って入力モードを確実にしておきます</li>
+      <li>変換候補の選び方も台本に書きます。スペースを連打する、<code>{down}</code> で送る、数字キーで選ぶ、いずれも書けます</li>
+    </ul>
+
+    <h3>タブと読み書き</h3>
+    <p>台本は<strong>アプリ内に自動保存</strong>されます。保存の操作は要りません。タブで何本でも持てるので、シーンごと、言語ごと、尺の長短ごとに用意しておいて、撮影の場で切り替えられます。</p>
+    <ul class="plain">
+      <li><code>+</code> で追加、ダブルクリックまたは右クリック &gt; 名前を変更でリネーム、<code>×</code> で削除、右クリック &gt; 複製</li>
+      <li><strong>インポート…</strong> は <code>.keys</code> ファイルを新しいタブとして読み込みます</li>
+      <li><strong>エクスポート…</strong> はいま開いているタブを <code>.keys</code> に書き出します。ファイル操作は保存のためではなく、受け渡しのためのものです</li>
+    </ul>
+  </section>
+
+  <!-- 06 ─────────────────────────────────────── -->
+  <section id="play">
+    <h2><span class="num">06</span>再生する</h2>
+
+    <ol class="steps">
+      <li>台本エディタで、打たせたい台本のタブを選びます。</li>
+      <li>撮り直しのために本文を空にしてから始めるなら、<strong>「再生前に本文を消去」</strong>にチェックを入れます(既定はオン)。消去は <kbd>⌘Z</kbd> で元に戻せます。</li>
+      <li><strong>再生</strong>を押します。書類ウィンドウが前面に出て、<code>#lead</code> の秒数だけカウントダウンしてから打ち始めます。</li>
+      <li>再生が終わるまで、キーボードとマウスに触れません。</li>
+    </ol>
+
+    <h3>止める</h3>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td><kbd>ESC</kbd></td><td>いちばん確実。再生中に効く唯一のキーです</td></tr>
+          <tr><td>停止ボタン</td><td>台本エディタの赤いバナー、またはフローティング HUD</td></tr>
+          <tr><td><kbd>⌥⌘.</kbd></td><td>メニューの <strong>デモ &gt; 停止</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>途中で止めると、未確定の変換中テキストは破棄されます。</p>
+
+    <h3>再生中の表示</h3>
+    <p>再生中であることが一目で分かるよう、次の表示が出ます。</p>
+    <ul class="plain">
+      <li><strong>フローティング HUD</strong> — 常に最前面に浮かぶ小さな表示。点滅する赤い点、カウントダウン、進み具合、停止ボタン。キーフォーカスを奪わないので、これを操作しても変換は壊れません。ドラッグで動かせて位置は記憶されます。撮影に映り込むなら、台本エディタの「再生中の表示を最前面に」をオフにします</li>
+      <li><strong>台本エディタ</strong> — 赤いバナーとウィンドウ全体の赤枠。再生中は本文の編集とボタンがロックされます</li>
+    </ul>
+  </section>
+
+  <!-- 07 ─────────────────────────────────────── -->
+  <section id="keycast">
+    <h2><span class="num">07</span>キー入力を見せる</h2>
+
+    <p>チュートリアルを撮るときは、押されたキーを画面に重ねて表示できます。<kbd>⇧↩</kbd> のように修飾キーまで出るので、見ている人に操作が伝わります。既定はオフです。設定は台本エディタの<strong>「キー表示」</strong>ボタンから。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>項目</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>表示するキー</td><td><strong>すべてのキー</strong>(連続するローマ字はひと続きの札にまとまります)/ <strong>特殊キーのみ</strong>(修飾キー付きの操作と特殊キーだけ)</td></tr>
+          <tr><td>位置</td><td>カーソル位置 / 左下 / 下中央 / 右下 / 上中央</td></tr>
+          <tr><td>大きさ</td><td>14〜44pt</td></tr>
+          <tr><td>残す時間</td><td>0.5〜5 秒</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>「カーソル位置」を選ぶと、札が挿入点のすぐ下に付いて動きます。端では自動的に内側へ寄り、下に入らなければ上に回ります。打つ・変換する・確定する、という流れがそのまま読み取れます。</p>
+
+    <div class="note">
+      <p>台本の合成キーも手打ちも同じ経路を通るので、<strong>自動再生でも手で打っても同じように表示されます</strong>。札は書類ウィンドウの一部なので、録画にもそのまま映ります。</p>
+    </div>
+  </section>
+
+  <!-- 08 ─────────────────────────────────────── -->
+  <section id="record">
+    <h2><span class="num">08</span>録画する</h2>
+
+    <p>台本エディタの<strong>「録画して再生」</strong>を押すと、書類ウィンドウを録画しながらデモを再生します。再生が終わると録画も自動で止まり、トリミング画面が開きます。外部の画面収録アプリは要りません。</p>
+
+    <ul class="plain">
+      <li>出力は <strong>H.264 / mp4(音声なし)</strong>。解像度は書類ウィンドウの実ピクセル(Retina なら 2 倍)</li>
+      <li><strong>映るのは書類ウィンドウの中身だけ</strong>です。手前に台本エディタや HUD が重なっていても映りません。逆に、キー入力の札と文字数カウンタは書類ウィンドウの一部なので映ります</li>
+      <li>録画中は書類ウィンドウのリサイズができません(録画の解像度は開始時に固定されるため)</li>
+      <li>マウスカーソルは既定で映りません。<strong>デモ &gt; マウスカーソルを録画に含める</strong>で切り替えます</li>
+      <li>止め方は再生の停止と同じです。録画だけ止めたいときは <strong>デモ &gt; 録画停止</strong>(<kbd>⌥⌘R</kbd>)</li>
+    </ul>
+
+    <h3>背景を付ける</h3>
+    <p>「<strong>録画設定</strong>」から、書類ウィンドウを背景の上に余白付きで浮かせて録画できます。このページの冒頭の映像がその絵です。</p>
+
+    <figure>
+      <svg viewBox="0 0 760 430" role="img" aria-label="背景付き録画の構成">
+        <defs>
+          <pattern id="bg" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="14" stroke="currentColor" stroke-opacity="0.14" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect x="20" y="20" width="720" height="405" fill="url(#bg)" stroke="currentColor" stroke-opacity="0.3"/>
+        <rect x="118" y="82" width="524" height="281" rx="12" fill="currentColor" fill-opacity="0.04" stroke="currentColor" stroke-opacity="0.5"/>
+        <g stroke="currentColor" stroke-opacity="0.45" fill="none">
+          <path d="M20 60 H118 M642 60 H740"/>
+          <path d="M20 54 V66 M118 54 V66 M642 54 V66 M740 54 V66"/>
+        </g>
+        <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">
+          <text x="69" y="46" text-anchor="middle" fill-opacity="0.65">余白</text>
+          <text x="691" y="46" text-anchor="middle" fill-opacity="0.65">0〜25%</text>
+          <text x="380" y="200" text-anchor="middle" font-size="13">書類ウィンドウ(等倍のまま重ねる)</text>
+          <text x="380" y="226" text-anchor="middle" fill-opacity="0.6">角丸・ドロップシャドウ付き</text>
+          <text x="380" y="404" text-anchor="middle" fill-opacity="0.6">背景 = 画像 または 単色 / 縦横比 16:9・16:10・4:3・ウィンドウに合わせる</text>
+        </g>
+      </svg>
+      <figcaption>背景付きの構成。ウィンドウは拡大せず等倍のまま重ねるので、文字は滲みません。</figcaption>
+    </figure>
+
+    <ul class="plain">
+      <li><strong>背景</strong> — 画像か単色を選びます。画像はアプリ内にコピーされ、キャンバスに合わせて中央基準で切り取られます。未選択なら暗いグラデーションになります</li>
+      <li><strong>プレビュー</strong> — 設定した縦横比そのままの枠で、余白・角丸・影・ウィンドウの位置まで確認できます。書き出しサイズも下に出ます</li>
+      <li>ウィンドウを拡大しないぶん、書き出しはウィンドウより大きくなります(860×680 のウィンドウ・余白 8%・16:9 なら 2878×1618)。背景は静止しているので、H.264 ではほとんど容量を食いません</li>
+    </ul>
+
+    <h3>トリミングと書き出し</h3>
+    <p>録画が終わると自動でトリミング画面が開きます。</p>
+    <ul class="plain">
+      <li>プレビューを再生しながら、フィルムストリップ上の 2 つのハンドルで開始点と終了点を決めます。ストリップのクリックでシーク、「ここを開始に」「ここを終了に」で再生ヘッドの位置をハンドルに送れます</li>
+      <li>「録画して再生」は<strong>カウントダウンより前から回っている</strong>ので、頭の余白はここで落とす前提です</li>
+      <li><strong>解像度</strong>はオリジナル / 1080p / 720p。高さを基準に、横は元の比のまま合わせます。元より大きくは書き出しません</li>
+      <li>「書き出し…」で保存先を選ぶと mp4 を書き出します。カット位置はキーフレーム境界ではなくフレーム単位で正確です</li>
+      <li>素材は一旦アプリの中に置かれ、書き出すか破棄すると消えます</li>
+    </ul>
+
+    <div class="note">
+      <p>録画中は macOS がタイトルバーに画面共有のインジケータを出します。書類ウィンドウを切り出して録るので、これも一緒に映ります(冒頭の映像の左上に写っている小さなピルがそれです)。気になる場合は、書き出したあとに動画編集で上端を切ってください。</p>
+    </div>
+  </section>
+
+  <!-- 09 ─────────────────────────────────────── -->
+  <section id="tips">
+    <h2><span class="num">09</span>撮影のこつ</h2>
+
+    <ul class="plain">
+      <li><strong>本番前に必ず一度リハーサル再生する。</strong>変換結果は IME の学習状態に依存します。意図と違う変換になった箇所は、候補選択のキー(<code>{space}</code> の追加や <code>{down}</code>)を台本に足すか、一度手で正しく変換して IME に覚えさせます</li>
+      <li><strong>ライブ変換はオフを前提に台本を書く。</strong>オンだと挙動が変わり、台本どおりの見た目になりません</li>
+      <li><strong>再生中は AWriter を前面のままにする。</strong>他のアプリにフォーカスが移ると、変換中のテキストは破棄され、以降のキーも届きません</li>
+      <li><strong>再生中はキーボードに触れない。</strong>効くのは <kbd>ESC</kbd>(停止)だけです</li>
+      <li>撮影のあいだシステムの外観が切り替わらないよう、<strong>外観はライトかダークに固定</strong>しておきます</li>
+      <li>通知やスクリーンセーバが入らないよう、集中モードを入れておくと安全です</li>
+      <li>間の取り方は <code>{wait}</code> で作れます。台詞に合わせて止める、考えるふりをする、といった芝居も台本の側で決められます</li>
+    </ul>
+  </section>
+
+  <!-- 10 ─────────────────────────────────────── -->
+  <section id="shortcuts">
+    <h2><span class="num">10</span>ショートカット</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>キー</th><th>はたらき</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌥⌘P</kbd></td><td>台本エディタを開く(デモ &gt; 台本エディタ…)</td></tr>
+          <tr><td><kbd>ESC</kbd></td><td>再生を止める</td></tr>
+          <tr><td><kbd>⌥⌘.</kbd></td><td>再生を止める(デモ &gt; 停止)</td></tr>
+          <tr><td><kbd>⌥⌘R</kbd></td><td>録画だけ止める(デモ &gt; 録画停止)</td></tr>
+          <tr><td><kbd>⌘Z</kbd></td><td>「再生前に本文を消去」で消えた本文を戻す</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 11 ─────────────────────────────────────── -->
+  <section id="trouble">
+    <h2><span class="num">11</span>困ったとき</h2>
+
+    <h4>録画しようとすると許可を求められ、許可しても録画できない</h4>
+    <p>画面収録の許可は、プロセスの起動時に読まれます。許可したあとに <strong>AWriter を一度終了して起動し直して</strong>ください。</p>
+
+    <h4>台本どおりの漢字にならない</h4>
+    <p>変換しているのは macOS の日本語入力なので、その学習状態がそのまま出ます。リハーサル再生で確認し、候補選択のキーを台本に足すか、手で一度正しく変換して覚えさせてください。ライブ変換はオフを推奨します。</p>
+
+    <h4>途中でローマ字のまま出てしまう</h4>
+    <p>入力モードが英数になっています。台本の先頭や、モードが変わりうる箇所で <code>{kana}</code> を送ってください。</p>
+
+    <h4>再生が途中で止まる、途中から入力されない</h4>
+    <p>他のアプリにフォーカスが移った可能性があります。再生中は AWriter を前面のままにしてください。</p>
+
+    <h4>台本エディタを閉じてしまった</h4>
+    <p><strong>デモ &gt; 台本エディタ…</strong>(<kbd>⌥⌘P</kbd>)、またはウィンドウメニューから開き直せます。台本は自動保存されているので消えていません。</p>
+
+    <h4>HUD が撮影に映り込む</h4>
+    <p>台本エディタの「再生中の表示を最前面に」をオフにしてください。なお HUD は書類ウィンドウの録画には映りません。</p>
+
+    <h4>台本を別の Mac に持っていきたい</h4>
+    <p><strong>エクスポート…</strong> で <code>.keys</code> に書き出し、向こうで <strong>インポート…</strong> します。</p>
+  </section>
+
+  <footer class="colophon">
+    <span>AWriter — 文字を打つ場面を撮るための macOS 用エディタ</span>
+    <span><a href="https://github.com/TetsuakiBaba/awriter">GitHub</a> ・ <a href="https://github.com/TetsuakiBaba/awriter/releases/latest">Releases</a></span>
+  </footer>
+
+</div>
+
+<script>
+// 左の栞に現在地を映す
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  var seen = {};
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { seen[e.target.id] = e.isIntersecting; });
+    var current = null;
+    Object.keys(map).forEach(function (id) { if (seen[id] && !current) current = id; });
+    links.forEach(function (a) {
+      a.classList.toggle('current', a.getAttribute('href') === '#' + current);
+    });
+  }, { rootMargin: '-10% 0px -70% 0px' });
+  Object.keys(map).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>
