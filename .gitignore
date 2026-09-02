@@ -1,0 +1,7 @@
+build/
+dist/
+.DS_Store
+xcuserdata/
+*.xcuserdatad
+*.xcworkspace/xcuserdata/
+teaser.mp4

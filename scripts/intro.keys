@@ -1,0 +1,34 @@
+# AWriter 紹介映像の台本
+# 台本エディタの「インポート…」で読み込む。
+#
+# 変換結果は IME の学習状態に依存する。撮影前に一度リハーサル再生し、
+# 意図と違う漢字になった箇所はその場で正しく変換して IME に覚えさせるか、
+# 候補選択のキー({space} の追加や {down})を足すこと。
+# 特に注意: 「エディタ」「撮る」「芝居」は候補が揺れやすい。
+
+#lead 3
+#interval 95
+#jitter 0.3
+
+{kana}{wait 0.4}
+
+konoedhitaha,{space}{enter}kakutamenomonodehaarimasenn.{space}{enter}
+{wait 1.4}
+{enter}{enter}
+
+mojiwoutsubamennwo{space}{enter}torutameno,{space}{enter}dougudesu.{space}{enter}
+{enter}
+{wait 0.5}
+daihonnwokaiteokeba,{space}{enter}sonotooriniuchimasu.{space}{enter}
+{enter}
+{wait 0.5}
+uchimachigaimo,{space}{enter}hennkannnomotatsukimoarimasenn.{space}{enter}
+{wait 1.6}
+{enter}{enter}
+
+imagamennnideteiruhennkannmo,{space}{enter}
+{wait 0.3}
+honnmonononihonngonyuuryokudesu.{space}{enter}
+{enter}
+{wait 0.8}
+onajishibaiwo,{space}{enter}nanndodemo.{space}{enter}

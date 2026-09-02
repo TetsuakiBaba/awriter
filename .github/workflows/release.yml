@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'バージョン番号 (例 1.0.1)。タグは作らずビルドだけ試す用'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TEAM_ID: ZE8M4T49DP
+  IDENTITY: 'Developer ID Application: TETSUAKI BABA (ZE8M4T49DP)'
+
+jobs:
+  release:
+    # Xcode 16 系。手元(Xcode 26)に揃えたければ macos-26 に変える
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: バージョンを決める
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "AWriter $VERSION をビルドします"
+
+      - name: 署名証明書をキーチェーンに読み込む
+        env:
+          CERT_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+          echo "::add-mask::$KEYCHAIN_PASSWORD"
+          echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
+
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          echo "KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+
+          echo "$CERT_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+
+      - name: ビルド(arm64 + x86_64 ユニバーサル)
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          xcodebuild -project AWriter.xcodeproj -target AWriter -configuration Release \
+            -arch arm64 -arch x86_64 ONLY_ACTIVE_ARCH=NO \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="$IDENTITY" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --keychain $KEYCHAIN" \
+            SYMROOT="$PWD/build" \
+            build
+
+      - name: 署名の確認
+        run: |
+          APP="build/Release/AWriter.app"
+          codesign --verify --strict --verbose=2 "$APP"
+          codesign -dvvv "$APP" 2>&1 | grep -E 'Authority|flags'
+          lipo -info "$APP/Contents/MacOS/AWriter"
+
+      - name: アプリを公証してチケットを添付
+        env:
+          AC_APPLE_ID: ${{ secrets.AC_APPLE_ID }}
+          AC_PASSWORD: ${{ secrets.AC_APP_PASSWORD }}
+        run: |
+          APP="build/Release/AWriter.app"
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/AWriter.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/AWriter.zip" \
+            --apple-id "$AC_APPLE_ID" --team-id "$TEAM_ID" --password "$AC_PASSWORD" \
+            --wait --timeout 30m
+          xcrun stapler staple "$APP"
+
+      - name: DMG を作成・署名・公証
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          AC_APPLE_ID: ${{ secrets.AC_APPLE_ID }}
+          AC_PASSWORD: ${{ secrets.AC_APP_PASSWORD }}
+        run: |
+          DMG="dist/AWriter-$VERSION.dmg"
+          mkdir -p dist "$RUNNER_TEMP/staging"
+          cp -R build/Release/AWriter.app "$RUNNER_TEMP/staging/"
+          ln -s /Applications "$RUNNER_TEMP/staging/Applications"
+          hdiutil create -volname "AWriter" -srcfolder "$RUNNER_TEMP/staging" \
+            -ov -format UDZO -quiet "$DMG"
+
+          codesign --force --sign "$IDENTITY" --timestamp --keychain "$KEYCHAIN" "$DMG"
+          xcrun notarytool submit "$DMG" \
+            --apple-id "$AC_APPLE_ID" --team-id "$TEAM_ID" --password "$AC_PASSWORD" \
+            --wait --timeout 30m
+          xcrun stapler staple "$DMG"
+
+          echo "DMG=$DMG" >> "$GITHUB_ENV"
+
+      - name: Gatekeeper の判定
+        run: spctl -a -vvv -t install "$DMG"
+
+      - name: 成果物をアップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: AWriter-${{ steps.version.outputs.version }}-dmg
+          path: ${{ env.DMG }}
+
+      - name: GitHub Releases に公開
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          cat > "$RUNNER_TEMP/notes.md" <<'EOS'
+          macOS 14 以降 / Apple Silicon・Intel ユニバーサル。Developer ID 署名 + Apple 公証済み。
+
+          DMG を開いて `AWriter.app` を「アプリケーション」へドラッグしてください。
+          EOS
+
+          gh release create "$GITHUB_REF_NAME" "$DMG" \
+            --title "AWriter $VERSION" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --generate-notes
+
+      - name: キーチェーンを片付ける
+        if: always()
+        run: security delete-keychain "$KEYCHAIN" || true

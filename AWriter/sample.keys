@@ -1,0 +1,21 @@
+# AWriter デモ台本サンプル(夏目漱石『草枕』冒頭)
+# 書類ウィンドウを開いた状態で「デモ > サンプルを再生」
+# トークン: {enter} {space} {tab} {esc} {bs} {up} {down} {left} {right}
+#           {kana} {eisu}(かな/英数キー) {wait 秒} {cmd+n} などの修飾キー組み合わせ
+# 生改行はキーを送らない(改行は {enter} で明示)
+
+#lead 3
+#interval 100
+#jitter 0.35
+
+{kana}{wait 0.5}
+yamamichiwonoborinagara,koukangaeta.{space}{enter}
+{wait 0.8}
+{enter}
+chinihatarakebakadogatatu.{space}{enter}
+{wait 0.6}
+jounisaosasebanagasareru.{space}{enter}
+{wait 0.6}
+ijiwotoosebakyuukutuda.{space}{enter}
+{wait 0.6}
+tokakunihitonoyohasuminikui.{space}{enter}
