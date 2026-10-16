@@ -22,6 +22,7 @@ struct AWriterApp: App {
 
     static let editorWindowID = "editor"
     static let scriptWindowID = "script-editor"
+    static let opensScriptEditorAtLaunchKey = "opensScriptEditorAtLaunch"
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -42,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct DemoCommands: Commands {
     @Environment(\.openWindow) private var openWindow
+    @AppStorage(AWriterApp.opensScriptEditorAtLaunchKey) private var opensScriptEditorAtLaunch = true
 
     var body: some Commands {
         CommandMenu("デモ") {
@@ -49,6 +51,8 @@ struct DemoCommands: Commands {
                 openWindow(id: AWriterApp.scriptWindowID)
             }
             .keyboardShortcut("p", modifiers: [.command, .option])
+
+            Toggle("起動時に台本エディタを開く", isOn: $opensScriptEditorAtLaunch)
 
             Divider()
 

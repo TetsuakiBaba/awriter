@@ -10,6 +10,7 @@ struct EditorView: View {
     @AppStorage("textColorHex") private var textColorHex: String = TextInk.automaticID
 
     @AppStorage(KeystrokeSettings.positionKey) private var keycastPosition = KeystrokePosition.bottom.rawValue
+    @AppStorage(AWriterApp.opensScriptEditorAtLaunchKey) private var opensScriptEditorAtLaunch = true
 
     @Environment(\.openWindow) private var openWindow
     @State private var showsTypographyPanel = false
@@ -65,6 +66,7 @@ struct EditorView: View {
         .onAppear {
             guard !hasOpenedScriptEditor else { return }
             hasOpenedScriptEditor = true
+            guard opensScriptEditorAtLaunch else { return }
             openWindow(id: AWriterApp.scriptWindowID)
         }
     }
