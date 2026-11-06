@@ -5,15 +5,22 @@ import ScreenCaptureKit
 /// 書類ウィンドウ(AWTextView を含む窓)だけを ScreenCaptureKit で切り出し、
 /// H.264 / mp4(音声なし)として書き出す録画エンジン。
 ///
-/// `SCContentFilter(desktopIndependentWindow:)` を使うので、手前に台本エディタや
-/// PlaybackHUD が重なっていても書類窓の中身だけが写る。逆に、キーキャスト表示は
-/// EditorView の overlay = 書類窓の中身なので、そのまま映像に入る。
+/// 既定では、書類窓の範囲の画面を「書類窓 + 入力メソッドの窓」だけに絞って撮る
+/// (`SCContentFilter(display:excludingApplications:exceptingWindows:)`)。変換候補の窓や
+/// IME が出す小窓は IME のプロセスが持つ別の窓なので、窓単体の撮り方では映らないため。
+/// AWriter 自身の窓は書類窓以外を除くので、手前に台本エディタや PlaybackHUD が重なっていても
+/// 映らない。キーキャスト表示は EditorView の overlay = 書類窓の中身なので、そのまま映像に入る。
+/// 「入力メソッドの窓を含める」を切ると、従来どおり `SCContentFilter(desktopIndependentWindow:)` で
+/// 書類窓だけを撮る。
 @MainActor
 final class WindowRecorder: NSObject, ObservableObject {
     static let shared = WindowRecorder()
 
     /// マウスカーソルを録画に含めるか。デモメニューのトグルから操作する。
     static let showsCursorDefaultsKey = "recorderShowsCursor"
+
+    /// 入力メソッド(IME)の窓を録画に含めるか。録画設定のトグルから操作する。既定はオン。
+    static let includesInputMethodWindowsDefaultsKey = "recorderIncludesInputMethodWindows"
 
     enum Phase: Equatable {
         case idle
@@ -68,6 +75,10 @@ final class WindowRecorder: NSObject, ObservableObject {
         UserDefaults.standard.bool(forKey: Self.showsCursorDefaultsKey)
     }
 
+    var includesInputMethodWindows: Bool {
+        UserDefaults.standard.object(forKey: Self.includesInputMethodWindowsDefaultsKey) as? Bool ?? true
+    }
+
     // MARK: - 開始
 
     /// 書類ウィンドウの録画を開始する。呼び出し側は再生よりも先にこれを await すること
@@ -92,7 +103,8 @@ final class WindowRecorder: NSObject, ObservableObject {
         let content: SCShareableContent
         do {
             // 未許可なら初回はここでシステムの許可ダイアログが出て、以降は -3801 を投げる。
-            content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            // 画面に出ていない窓しか持たないアプリも除外の一覧に入れたいので、画面外の窓も含めて取る。
+            content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         } catch {
             throw Self.isAuthorizationFailure(error) ? RecorderError.notAuthorized : error
         }
@@ -136,7 +148,30 @@ final class WindowRecorder: NSObject, ObservableObject {
             compositor: compositor
         )
 
-        let filter = SCContentFilter(desktopIndependentWindow: scWindow)
+        let windowOnlyFilter = SCContentFilter(desktopIndependentWindow: scWindow)
+        var filter = windowOnlyFilter
+        var cornerMask: CornerMask?
+        if includesInputMethodWindows,
+           let display = content.displays.first(where: { $0.frame.contains(CGPoint(x: scWindow.frame.midX, y: scWindow.frame.midY)) }) {
+            // 窓の角丸の形は、窓だけを撮った 1 枚から取る。画面ごと撮ると角の外に何が写るか
+            // (透過か黒か)が OS に左右されるので、毎フレームこの形で角を抜き直す。
+            let maskSample = try? await SCScreenshotManager.captureSampleBuffer(
+                contentFilter: windowOnlyFilter, configuration: configuration
+            )
+            if let maskBuffer = maskSample?.imageBuffer, let mask = CornerMask(windowOnly: maskBuffer) {
+                let excluded = content.applications.filter { !Self.isInputMethod($0) }
+                filter = SCContentFilter(display: display, excludingApplications: excluded, exceptingWindows: [scWindow])
+                configuration.sourceRect = CGRect(
+                    x: scWindow.frame.minX - display.frame.minX,
+                    y: scWindow.frame.minY - display.frame.minY,
+                    width: scWindow.frame.width,
+                    height: scWindow.frame.height
+                )
+                cornerMask = mask
+            }
+        }
+        sink.cornerMask = cornerMask
+
         let stream = SCStream(filter: filter, configuration: configuration, delegate: self)
         try stream.addStreamOutput(sink, type: .screen, sampleHandlerQueue: sink.queue)
         try await stream.startCapture()
@@ -199,6 +234,14 @@ final class WindowRecorder: NSObject, ObservableObject {
     }
 
     // MARK: - 権限まわり
+
+    /// 入力メソッドのアプリか。`/Library/Input Methods/`・`~/Library/Input Methods/`・
+    /// `/System/Library/Input Methods/` のどれかに置かれたアプリを入力メソッドとみなす。
+    private static func isInputMethod(_ application: SCRunningApplication) -> Bool {
+        guard let path = NSRunningApplication(processIdentifier: application.processID)?.bundleURL?.path
+        else { return false }
+        return path.contains("/Input Methods/")
+    }
 
     private static func isAuthorizationFailure(_ error: Error) -> Bool {
         let nsError = error as NSError
@@ -303,6 +346,10 @@ private final class FrameSink: NSObject, SCStreamOutput, @unchecked Sendable {
     /// 背景合成。nil のときは窓をそのまま書く。
     private let compositor: BackdropCompositor?
 
+    /// 画面ごと撮るときの角丸の形。nil なら窓単体で撮っていて、角はもともと透過で来る。
+    /// ストリームを始める前に一度だけ設定する。
+    var cornerMask: CornerMask?
+
     init(url: URL, width: Int, height: Int, backdrop: (b: UInt8, g: UInt8, r: UInt8),
          compositor: BackdropCompositor?) throws {
         self.backdrop = backdrop
@@ -332,6 +379,8 @@ private final class FrameSink: NSObject, SCStreamOutput, @unchecked Sendable {
             firstPTS = pts
             started = true
         }
+
+        cornerMask?.apply(to: imageBuffer)
 
         let outputBuffer: CVImageBuffer
         if let compositor {
@@ -461,5 +510,79 @@ private final class FrameSink: NSObject, SCStreamOutput, @unchecked Sendable {
               let status = SCFrameStatus(rawValue: raw)
         else { return false }
         return status == .complete
+    }
+}
+
+// MARK: - 角丸の形
+
+/// 書類窓の角丸の外側の透過(アルファ)。窓だけを撮った 1 枚から上下の帯ぶんを取っておき、
+/// 画面ごと撮ったフレームの角に当てる。録画中は窓の大きさを固定するので形は変わらない。
+struct CornerMask: @unchecked Sendable {
+    let width: Int
+    let height: Int
+    let band: Int
+    /// 上の帯 band 行 → 下の帯 band 行の順に、1 画素 1 バイトのアルファ。
+    private let alphas: [UInt8]
+
+    init?(windowOnly pixelBuffer: CVPixelBuffer) {
+        guard CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_32BGRA,
+              CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly) == kCVReturnSuccess
+        else { return nil }
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddress(pixelBuffer) else { return nil }
+
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let band = min(height / 2, max(24, height / 20))
+        let pointer = base.assumingMemoryBound(to: UInt8.self)
+
+        var alphas = [UInt8](repeating: 255, count: band * 2 * width)
+        var hasTransparency = false
+        for index in 0..<(band * 2) {
+            let row = index < band ? index : height - band * 2 + index
+            let line = pointer + row * bytesPerRow
+            for column in 0..<width {
+                let alpha = line[column * 4 + 3]
+                alphas[index * width + column] = alpha
+                if alpha < 255 { hasTransparency = true }
+            }
+        }
+        // 透過が 1 画素もない(角丸のない窓、または取り損ね)なら当てても意味がない。
+        guard hasTransparency else { return nil }
+        self.width = width
+        self.height = height
+        self.band = band
+        self.alphas = alphas
+    }
+
+    /// 角の外側を窓だけのときと同じ透過にする(premultiplied のまま色も同じ比で落とす)。
+    /// 角の外が既に透過で来ていれば何も変わらない。黒などで埋まって来たときに効く。
+    func apply(to pixelBuffer: CVPixelBuffer) {
+        guard CVPixelBufferGetPixelFormatType(pixelBuffer) == kCVPixelFormatType_32BGRA,
+              CVPixelBufferGetWidth(pixelBuffer) == width,
+              CVPixelBufferGetHeight(pixelBuffer) == height,
+              CVPixelBufferLockBaseAddress(pixelBuffer, []) == kCVReturnSuccess
+        else { return }
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, []) }
+        guard let base = CVPixelBufferGetBaseAddress(pixelBuffer) else { return }
+
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let pointer = base.assumingMemoryBound(to: UInt8.self)
+        for index in 0..<(band * 2) {
+            let row = index < band ? index : height - band * 2 + index
+            let line = pointer + row * bytesPerRow
+            for column in 0..<width {
+                let mask = Int(alphas[index * width + column])
+                if mask == 255 { continue }
+                let pixel = line + column * 4
+                let alpha = Int(pixel[3])
+                if alpha <= mask { continue }
+                pixel[0] = UInt8(Int(pixel[0]) * mask / alpha)
+                pixel[1] = UInt8(Int(pixel[1]) * mask / alpha)
+                pixel[2] = UInt8(Int(pixel[2]) * mask / alpha)
+                pixel[3] = UInt8(mask)
+            }
+        }
     }
 }

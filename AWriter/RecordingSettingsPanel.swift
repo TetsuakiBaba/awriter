@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// 録画の設定。teaser.mp4 のように背景の上に窓を浮かせるかどうかをここで決める。
 struct RecordingSettingsPanel: View {
     @AppStorage(WindowRecorder.showsCursorDefaultsKey) private var showsCursor = false
+    @AppStorage(WindowRecorder.includesInputMethodWindowsDefaultsKey) private var includesInputMethodWindows = true
     @AppStorage(BackdropSettings.enabledKey) private var backdropEnabled = false
     @AppStorage(BackdropSettings.fillKey) private var fill = BackdropFill.image.rawValue
     @AppStorage(BackdropSettings.imagePathKey) private var backdropImagePath = ""
@@ -17,6 +18,9 @@ struct RecordingSettingsPanel: View {
         VStack(alignment: .leading, spacing: 16) {
             Toggle("マウスカーソルを含める", isOn: $showsCursor)
                 .help("タイピングのデモではふつうオフのままでよい")
+
+            Toggle("入力メソッドの窓を含める", isOn: $includesInputMethodWindows)
+                .help("変換候補の窓など、IME が書類ウィンドウの上に出す窓も映す。書類ウィンドウの枠からはみ出した部分は映らない")
 
             Divider()
 
