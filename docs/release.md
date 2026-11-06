@@ -35,10 +35,14 @@ base64 にしてクリップボードへ:
 base64 -i ~/Desktop/awriter-devid.p12 | pbcopy
 ```
 
-### 1-2. 公証用の App 用パスワードを用意する
+### 1-2. 公証用の App Store Connect API キーを用意する
 
-<https://appleid.apple.com> → サインインとセキュリティ → App 用パスワード で発行。
-ローカルで `notarytool store-credentials` に使ったものがあれば同じものでよい。
+公証には App Store Connect API キー(.p8)を使う。App 用パスワードと違って
+Apple ID のパスワードを変えても失効せず、ほかのアプリ(commentable など)と同じ鍵を使い回せる。
+
+新しく作る場合は <https://appstoreconnect.apple.com/access/integrations/api> →
+**チームキー** で「Developer」以上の権限のキーを発行し、`AuthKey_<キーID>.p8` をダウンロードする
+(ダウンロードは一度きり)。同じページに **Issuer ID** と **キー ID** が出ている。
 
 ---
 
@@ -54,19 +58,21 @@ base64 -i ~/Desktop/awriter-devid.p12 | gh secret set MACOS_CERTIFICATE_P12
 # .p12 書き出し時に設定したパスワード
 gh secret set MACOS_CERTIFICATE_PASSWORD
 
-# 公証に使う Apple ID(メールアドレス)
-gh secret set AC_APPLE_ID
+# 公証用 API キー(.p8 の中身をそのまま)
+gh secret set NOTARY_API_KEY_P8 < AuthKey_<キーID>.p8
 
-# 上で発行した App 用パスワード(xxxx-xxxx-xxxx-xxxx)
-gh secret set AC_APP_PASSWORD
+# キー ID と Issuer ID
+gh secret set NOTARY_API_KEY_ID
+gh secret set NOTARY_API_ISSUER_ID
 ```
 
 | Secret | 中身 |
 | --- | --- |
 | `MACOS_CERTIFICATE_P12` | Developer ID Application 証明書 + 秘密鍵の .p12 を base64 化したもの |
 | `MACOS_CERTIFICATE_PASSWORD` | .p12 書き出し時のパスワード |
-| `AC_APPLE_ID` | 公証に使う Apple ID |
-| `AC_APP_PASSWORD` | Apple ID の App 用パスワード |
+| `NOTARY_API_KEY_P8` | App Store Connect API キー(.p8 ファイルの中身) |
+| `NOTARY_API_KEY_ID` | API キーのキー ID |
+| `NOTARY_API_ISSUER_ID` | API キーの Issuer ID |
 
 チーム ID (`ZE8M4T49DP`) と署名 ID 名はワークフローの `env` に直書きしてある(秘密ではない)。
 
@@ -101,7 +107,7 @@ Release は作らずビルド〜公証〜Gatekeeper 判定まで通し、DMG を
 - **`security find-identity` に何も出ない** — .p12 に秘密鍵が入っていない。
   証明書ではなく「自分の証明書」カテゴリから書き出したか確認する。
 - **公証が `Invalid` で返る** — ジョブログの submission ID を控えて
-  `xcrun notarytool log <id> --apple-id ... --team-id ZE8M4T49DP --password ...` で理由を見る。
+  `xcrun notarytool log <id> --key AuthKey_<キーID>.p8 --key-id <キーID> --issuer <Issuer ID>` で理由を見る。
   Hardened Runtime とタイムスタンプはワークフロー側で有効にしてある。
 - **`spctl` が rejected** — 公証チケットの staple 前に判定している場合など。
   ジョブは公証 → staple → 判定の順に並べてある。

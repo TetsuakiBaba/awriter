@@ -86,23 +86,37 @@ jobs:
           codesign -dvvv "$APP" 2>&1 | grep -E 'Authority|flags'
           lipo -info "$APP/Contents/MacOS/AWriter"
 
+      # 公証は App Store Connect API キーで行う(App 用パスワードは Apple ID の変更で失効するため)。
+      # 鍵はファイルに書き出してジョブの最後に消す。キー ID などは使うステップにだけ渡す
+      - name: 公証の鍵を用意する
+        env:
+          NOTARY_API_KEY_P8: ${{ secrets.NOTARY_API_KEY_P8 }}
+        run: |
+          if [ -z "$NOTARY_API_KEY_P8" ]; then
+            echo "::error::シークレット NOTARY_API_KEY_P8 がありません"
+            exit 1
+          fi
+          (umask 077 && echo "$NOTARY_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8")
+
       - name: アプリを公証してチケットを添付
         env:
-          AC_APPLE_ID: ${{ secrets.AC_APPLE_ID }}
-          AC_PASSWORD: ${{ secrets.AC_APP_PASSWORD }}
+          NOTARY_KEY: ${{ runner.temp }}/AuthKey.p8
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_ISSUER: ${{ secrets.NOTARY_API_ISSUER_ID }}
         run: |
           APP="build/Release/AWriter.app"
           ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/AWriter.zip"
           xcrun notarytool submit "$RUNNER_TEMP/AWriter.zip" \
-            --apple-id "$AC_APPLE_ID" --team-id "$TEAM_ID" --password "$AC_PASSWORD" \
+            --key "$NOTARY_KEY" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" \
             --wait --timeout 30m
           xcrun stapler staple "$APP"
 
       - name: DMG を作成・署名・公証
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          AC_APPLE_ID: ${{ secrets.AC_APPLE_ID }}
-          AC_PASSWORD: ${{ secrets.AC_APP_PASSWORD }}
+          NOTARY_KEY: ${{ runner.temp }}/AuthKey.p8
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_ISSUER: ${{ secrets.NOTARY_API_ISSUER_ID }}
         run: |
           DMG="dist/AWriter-$VERSION.dmg"
           mkdir -p dist "$RUNNER_TEMP/staging"
@@ -113,7 +127,7 @@ jobs:
 
           codesign --force --sign "$IDENTITY" --timestamp --keychain "$KEYCHAIN" "$DMG"
           xcrun notarytool submit "$DMG" \
-            --apple-id "$AC_APPLE_ID" --team-id "$TEAM_ID" --password "$AC_PASSWORD" \
+            --key "$NOTARY_KEY" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" \
             --wait --timeout 30m
           xcrun stapler staple "$DMG"
 
@@ -145,6 +159,8 @@ jobs:
             --notes-file "$RUNNER_TEMP/notes.md" \
             --generate-notes
 
-      - name: キーチェーンを片付ける
+      - name: キーチェーンと公証の鍵を片付ける
         if: always()
-        run: security delete-keychain "$KEYCHAIN" || true
+        run: |
+          security delete-keychain "$KEYCHAIN" || true
+          rm -f "$RUNNER_TEMP/AuthKey.p8"
