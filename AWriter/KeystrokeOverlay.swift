@@ -10,9 +10,19 @@ enum KeystrokeSettings {
     static let positionKey = "keycastPosition"
     static let sizeKey = "keycastSize"
     static let durationKey = "keycastDuration"
+    static let groupLengthKey = "keycastGroupLength"
 
     static let defaultSize: Double = 22
     static let defaultDuration: Double = 1.6
+    static let defaultGroupLength: Double = 20
+    static let groupLengthRange: ClosedRange<Double> = 5...60
+
+    /// ひと続きの札に溜める文字数の上限。超えたら次の札に移る。
+    static var groupLength: Int {
+        let stored = UserDefaults.standard.double(forKey: groupLengthKey)
+        let value = stored > 0 ? stored : defaultGroupLength
+        return Int(min(max(value, groupLengthRange.lowerBound), groupLengthRange.upperBound))
+    }
 }
 
 enum KeystrokeMode: String, CaseIterable, Identifiable {
@@ -97,7 +107,6 @@ final class KeystrokeOverlay: ObservableObject {
 
     private var expiryTasks: [UUID: Task<Void, Never>] = [:]
     private static let maxCues = 10
-    private static let maxPlainLength = 20
 
     private init() {}
 
@@ -123,7 +132,7 @@ final class KeystrokeOverlay: ObservableObject {
         if isPlain,
            let last = cues.last,
            last.isPlain,
-           last.text.count < Self.maxPlainLength {
+           last.text.count < KeystrokeSettings.groupLength {
             cues[cues.count - 1].text += text
             scheduleExpiry(for: last.id)
             return
@@ -297,6 +306,7 @@ struct KeystrokeSettingsPanel: View {
     @AppStorage(KeystrokeSettings.positionKey) private var position: String = KeystrokePosition.bottom.rawValue
     @AppStorage(KeystrokeSettings.sizeKey) private var size: Double = KeystrokeSettings.defaultSize
     @AppStorage(KeystrokeSettings.durationKey) private var duration: Double = KeystrokeSettings.defaultDuration
+    @AppStorage(KeystrokeSettings.groupLengthKey) private var groupLength: Double = KeystrokeSettings.defaultGroupLength
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -354,6 +364,22 @@ struct KeystrokeSettingsPanel: View {
                         .frame(width: 26, alignment: .trailing)
                 }
             }
+
+            VStack(alignment: .leading, spacing: 6) {
+                label("1枚の札の文字数")
+                HStack(spacing: 10) {
+                    Slider(value: $groupLength, in: KeystrokeSettings.groupLengthRange, step: 1)
+                    Text("\(Int(groupLength)) 字")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .frame(width: 52, alignment: .trailing)
+                }
+                Text("連続して打った文字をこの文字数まで1枚の札にまとめます。超えると次の札に移ります。")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .disabled(KeystrokeMode(rawValue: mode) == .specialOnly)
 
             VStack(alignment: .leading, spacing: 6) {
                 label("残す時間")
