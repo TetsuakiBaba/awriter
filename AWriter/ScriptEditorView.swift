@@ -436,6 +436,12 @@ struct ScriptEditorView: View {
         if let keys = UTType(filenameExtension: "keys", conformingTo: .text) {
             types.insert(keys, at: 0)
         }
+        // .keys は OS に登録された型がないので、ほかのアプリやエディタで作ったファイルは
+        // public.data に連なる動的な型(dyn.ah62d4rv4ge8003p3sq)になる。上の「テキストとしての .keys」
+        // (dyn.ah62d4r34ge8003p3sq)とは識別子が違い、これを許さないと開くパネルで灰色になって選べない。
+        if let keysAsData = UTType(filenameExtension: "keys") {
+            types.insert(keysAsData, at: 0)
+        }
         return types
     }
 
