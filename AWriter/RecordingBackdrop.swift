@@ -211,22 +211,36 @@ final class BackdropCompositor {
         }
 
         if settings.showsShadow {
-            // 窓のシルエット(角丸矩形)ぶんだけ影を落とす。窓自体はこのあと重ねるので、
-            // ここで塗る色は見えない。
+            // 窓のシルエット(角丸矩形)ぶんだけ影を落とし、影を落とした形そのもの(黒の塗り)は抜いて
+            // 影だけを残す。塗りを残すと、窓の角丸がこの形より大きいとき(ツールバー付きの窓は
+            // 実ピクセルで 55px ほどある)に角から黒がはみ出し、窓の縁の半透明の画素からも黒が透ける。
+            let silhouette = CGPath(
+                roundedRect: windowRect.insetBy(dx: 1, dy: 1),
+                cornerWidth: geometry.cornerRadius,
+                cornerHeight: geometry.cornerRadius,
+                transform: nil
+            )
             context.saveGState()
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
             context.setShadow(
                 offset: CGSize(width: 0, height: -canvasSize.height * 0.012),
                 blur: canvasSize.height * 0.035,
                 color: CGColor(red: 0, green: 0, blue: 0, alpha: 0.45)
             )
             context.setFillColor(CGColor(gray: 0, alpha: 1))
+            context.addPath(silhouette)
+            context.fillPath()
+            // 塗りを抜く。縁のぼかしで黒がにじみ残らないよう、1px 広げた形で抜く(窓が上に重なるので見えない)
+            context.setShadow(offset: .zero, blur: 0, color: nil)
+            context.setBlendMode(.clear)
             context.addPath(CGPath(
-                roundedRect: windowRect.insetBy(dx: 1, dy: 1),
+                roundedRect: windowRect,
                 cornerWidth: geometry.cornerRadius,
                 cornerHeight: geometry.cornerRadius,
                 transform: nil
             ))
             context.fillPath()
+            context.endTransparencyLayer()
             context.restoreGState()
         }
 
