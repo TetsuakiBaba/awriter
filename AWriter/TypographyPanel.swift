@@ -7,6 +7,7 @@ struct TypographyPanel: View {
     @Binding var colorHex: String
 
     @AppStorage(AppearanceMode.defaultsKey) private var appearanceMode = AppearanceMode.system.rawValue
+    @AppStorage(EditorView.showsCharacterCountKey) private var showsCharacterCount = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -61,6 +62,12 @@ struct TypographyPanel: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                sectionTitle("表示")
+                // 文字数は書類ウィンドウの一部なので録画にも映る。撮影で邪魔ならここで消す
+                Toggle("右下に文字数を表示", isOn: $showsCharacterCount)
             }
         }
         .padding(20)

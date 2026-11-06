@@ -2,6 +2,9 @@ import SwiftUI
 import AppKit
 
 struct EditorView: View {
+    /// 右下の文字数を出すか。「Aa」のポップオーバーの「表示」から切り替える。既定はオン。
+    static let showsCharacterCountKey = "showsCharacterCount"
+
     @AppStorage("editorText") private var text: String = ""
     @AppStorage(EditorWindowTitle.defaultsKey) private var windowTitle: String = ""
 
@@ -11,6 +14,7 @@ struct EditorView: View {
 
     @AppStorage(KeystrokeSettings.positionKey) private var keycastPosition = KeystrokePosition.bottom.rawValue
     @AppStorage(AWriterApp.opensScriptEditorAtLaunchKey) private var opensScriptEditorAtLaunch = true
+    @AppStorage(EditorView.showsCharacterCountKey) private var showsCharacterCount = true
 
     @Environment(\.openWindow) private var openWindow
     @State private var showsTypographyPanel = false
@@ -36,14 +40,16 @@ struct EditorView: View {
             }
         }
         .overlay(alignment: .bottomTrailing) {
-            Text("\(text.count) 文字")
-                .font(.system(size: 11))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4)
-                .background(.ultraThinMaterial, in: Capsule())
-                .padding(12)
+            if showsCharacterCount {
+                Text("\(text.count) 文字")
+                    .font(.system(size: 11))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .padding(12)
+            }
         }
         .background(EditorWindowTitle(title: windowTitle))
         .toolbar {
@@ -53,7 +59,7 @@ struct EditorView: View {
                 } label: {
                     Label("文字組み", systemImage: "textformat")
                 }
-                .help("フォント・サイズ・文字色")
+                .help("フォント・サイズ・文字色・外観・表示")
                 .popover(isPresented: $showsTypographyPanel, arrowEdge: .bottom) {
                     TypographyPanel(
                         fontID: $fontID,
