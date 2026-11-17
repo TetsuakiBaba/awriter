@@ -44,6 +44,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct DemoCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @AppStorage(AWriterApp.opensScriptEditorAtLaunchKey) private var opensScriptEditorAtLaunch = true
+    @AppStorage(ScriptEditorView.clearsBeforePlayKey) private var clearsBeforePlay = true
+    @ObservedObject private var recorder = WindowRecorder.shared
+    @ObservedObject private var player = DemoPlayer.shared
 
     var body: some Commands {
         CommandMenu("デモ") {
@@ -61,10 +64,12 @@ struct DemoCommands: Commands {
             }
             .keyboardShortcut(".", modifiers: [.command, .option])
 
-            Button("録画停止") {
-                Task { await WindowRecorder.shared.stop() }
+            // 止まっているときは手打ちの録画を始め、回っているときは(台本の録画でも)止める
+            Button(recorder.phase.isActive ? "録画停止" : "手打ちで録画") {
+                WindowRecorder.shared.toggleManual(clearingDocument: clearsBeforePlay)
             }
             .keyboardShortcut("r", modifiers: [.command, .option])
+            .disabled(!recorder.phase.isActive && player.phase.isActive)
 
         }
     }

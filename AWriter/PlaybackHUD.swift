@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-/// 再生中に常に最前面へ浮かべる状態表示。
+/// 再生中(と手動録画中)に常に最前面へ浮かべる状態表示。
 /// 書類ウィンドウが前面でも見えるようフローティングにし、
 /// キーフォーカスを奪わない(奪うと IME の変換が壊れる)。
 @MainActor
@@ -66,19 +66,27 @@ private final class NonActivatingPanel: NSPanel {
 
 struct PlaybackHUDView: View {
     @ObservedObject private var player = DemoPlayer.shared
+    @ObservedObject private var recorder = WindowRecorder.shared
+
+    /// 台本を使わず手で打っているところを録っている。
+    private var isManualRecording: Bool { recorder.isManual && !player.phase.isActive }
 
     var body: some View {
         HStack(spacing: 12) {
             leading
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(player.phase.headline)
-                    .font(.system(size: 13, weight: .semibold))
-                    .monospacedDigit()
-                Text("ESC で停止")
+                if isManualRecording {
+                    manualHeadline
+                } else {
+                    Text(player.phase.headline)
+                        .font(.system(size: 13, weight: .semibold))
+                        .monospacedDigit()
+                }
+                Text(isManualRecording ? "⌥⌘R で停止" : "ESC で停止")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
-                if let progress = player.phase.progress {
+                if !isManualRecording, let progress = player.phase.progress {
                     ProgressView(value: progress)
                         .progressViewStyle(.linear)
                         .tint(.red)
@@ -89,7 +97,11 @@ struct PlaybackHUDView: View {
             Spacer(minLength: 0)
 
             Button {
-                DemoPlayer.shared.stop()
+                if isManualRecording {
+                    Task { await WindowRecorder.shared.stop() }
+                } else {
+                    DemoPlayer.shared.stop()
+                }
             } label: {
                 Image(systemName: "stop.fill")
                     .font(.system(size: 12))
@@ -98,7 +110,7 @@ struct PlaybackHUDView: View {
             .buttonStyle(.plain)
             .background(Color.red.opacity(0.85), in: Circle())
             .foregroundStyle(.white)
-            .help("再生を停止")
+            .help(isManualRecording ? "録画を停止" : "再生を停止")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -107,6 +119,22 @@ struct PlaybackHUDView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(Color.red.opacity(0.55), lineWidth: 2)
+        }
+    }
+
+    /// `録画中  00:12` の形で経過時間を出す。
+    @ViewBuilder
+    private var manualHeadline: some View {
+        if case .recording(let startedAt) = recorder.phase {
+            TimelineView(.periodic(from: startedAt, by: 1)) { context in
+                let elapsed = Int(max(0, context.date.timeIntervalSince(startedAt)))
+                Text("録画中  " + String(format: "%02d:%02d", elapsed / 60, elapsed % 60))
+                    .font(.system(size: 13, weight: .semibold))
+                    .monospacedDigit()
+            }
+        } else {
+            Text("録画中")
+                .font(.system(size: 13, weight: .semibold))
         }
     }
 

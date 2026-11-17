@@ -80,10 +80,10 @@
     <ul class="plain">
       <li>押すキーを台本に書いておくと、そのとおりに打ちます。打鍵の間隔にはゆらぎが入るので、機械が吐き出しているようには見えません</li>
       <li>かなを漢字に変えているのは macOS の日本語入力そのものです。未確定の下線も候補ウィンドウも、画面に映るのは本物です</li>
-      <li>「再生前に本文を消去」で頭から撮り直せます。カメラの位置を変えても同じ芝居が返ってきます</li>
+      <li>「開始前に本文を消去」で頭から撮り直せます。カメラの位置を変えても同じ芝居が返ってきます</li>
       <li>書類の管理をしません。保存の確認も、編集済みの表示も出ません。ウィンドウの名前は自由に決められ、空にすればタイトルは出ません</li>
       <li>カーソルも変換中の下線も選択範囲も無彩色です。アプリ由来の色味が絵に入りません</li>
-      <li>書類ウィンドウだけを mp4 に録画できます。背景を敷いて余白付きで浮かせる絵も、アプリの中で作れます</li>
+      <li>書類ウィンドウだけを mp4 に録画できます。台本を再生しながらでも、自分で打ちながらでも撮れます。背景を敷いて余白付きで浮かせる絵も、アプリの中で作れます</li>
     </ul>
 
     <div class="note">
@@ -171,19 +171,21 @@
         <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="currentColor">
           <!-- controlBar -->
           <g fill="none" stroke="currentColor" stroke-opacity="0.35">
-            <rect x="38" y="36" width="66" height="24" rx="6"/>
-            <rect x="112" y="36" width="112" height="24" rx="6"/>
-            <rect x="238" y="42" width="12" height="12" rx="3"/>
-            <rect x="448" y="36" width="118" height="24" rx="5"/>
+            <rect x="38" y="36" width="56" height="24" rx="6"/>
+            <rect x="100" y="36" width="100" height="24" rx="6"/>
+            <rect x="206" y="36" width="92" height="24" rx="6"/>
+            <rect x="306" y="42" width="12" height="12" rx="3"/>
+            <rect x="518" y="36" width="70" height="24" rx="5"/>
             <rect x="596" y="36" width="72" height="24" rx="6"/>
             <rect x="676" y="36" width="72" height="24" rx="6"/>
             <rect x="756" y="36" width="110" height="24" rx="6"/>
           </g>
-          <text x="71" y="53" text-anchor="middle">▶ 再生</text>
-          <text x="168" y="53" text-anchor="middle">● 録画して再生</text>
-          <text x="258" y="53">再生前に本文を消去</text>
-          <text x="440" y="53" text-anchor="end" fill-opacity="0.6">ウィンドウ名</text>
-          <text x="458" y="53" fill-opacity="0.45">(なし)</text>
+          <text x="66" y="53" text-anchor="middle">▶ 再生</text>
+          <text x="150" y="53" text-anchor="middle">● 録画して再生</text>
+          <text x="252" y="53" text-anchor="middle">手打ちで録画</text>
+          <text x="324" y="53">開始前に本文を消去</text>
+          <text x="512" y="53" text-anchor="end" fill-opacity="0.6">ウィンドウ名</text>
+          <text x="528" y="53" fill-opacity="0.45">(なし)</text>
           <text x="632" y="53" text-anchor="middle">キー表示</text>
           <text x="712" y="53" text-anchor="middle">録画設定</text>
           <text x="811" y="53" text-anchor="middle" font-size="10.5">インポート / 書き出し</text>
@@ -255,7 +257,7 @@
     <div class="table-wrap">
       <table>
         <tbody>
-          <tr><td>A</td><td>再生と録画、「再生前に本文を消去」、ウィンドウ名、キー表示・録画設定、台本の読み書き</td></tr>
+          <tr><td>A</td><td>再生と録画、手打ちの録画、「開始前に本文を消去」、ウィンドウ名、キー表示・録画設定、台本の読み書き</td></tr>
           <tr><td>B</td><td>台本のタブ。<code>+</code> で追加、ダブルクリックで名前を変更、<code>×</code> で削除</td></tr>
           <tr><td>C</td><td>トークンのボタン。押すとカーソル位置に挿入されます</td></tr>
           <tr><td>D</td><td>台本の本文。等幅で表示され、アプリ内に自動保存されます</td></tr>
@@ -364,7 +366,7 @@ chinihatarakebakadogatatu.{space}{enter}</code></pre>
 
     <ol class="steps">
       <li>台本エディタで、打たせたい台本のタブを選びます。</li>
-      <li>撮り直しのために本文を空にしてから始めるなら、<strong>「再生前に本文を消去」</strong>にチェックを入れます(既定はオン)。消去は <kbd>⌘Z</kbd> で元に戻せます。</li>
+      <li>撮り直しのために本文を空にしてから始めるなら、<strong>「開始前に本文を消去」</strong>にチェックを入れます(既定はオン)。消去は <kbd>⌘Z</kbd> で元に戻せます。</li>
       <li><strong>再生</strong>を押します。書類ウィンドウが前面に出て、<code>#lead</code> の秒数だけカウントダウンしてから打ち始めます。</li>
       <li>再生が終わるまで、キーボードとマウスに触れません。</li>
     </ol>
@@ -428,6 +430,19 @@ chinihatarakebakadogatatu.{space}{enter}</code></pre>
       <li>録画中は書類ウィンドウのリサイズができません(録画の解像度は開始時に固定されるため)</li>
       <li>マウスカーソルは既定で映りません。<strong>デモ &gt; マウスカーソルを録画に含める</strong>で切り替えます</li>
       <li>止め方は再生の停止と同じです。録画だけ止めたいときは <strong>デモ &gt; 録画停止</strong>(<kbd>⌥⌘R</kbd>)</li>
+    </ul>
+
+    <h3>自分で打って録画する</h3>
+    <p>台本を書かずに、自分の手で打つところを撮ることもできます。</p>
+    <ol class="steps">
+      <li>台本エディタの<strong>「手打ちで録画」</strong>を押すか、<kbd>⌥⌘R</kbd>(<strong>デモ &gt; 手打ちで録画</strong>)を押します。「開始前に本文を消去」がオンなら、本文を空にしてから始まります。</li>
+      <li>録画が始まり、書類ウィンドウが前面に出て入力できる状態になります。そのまま打ってください。変換も候補の窓も、台本の再生と同じように映ります。</li>
+      <li>打ち終えたら <kbd>⌥⌘R</kbd> をもう一度押すか、HUD の停止ボタンで止めます。トリミング画面が開きます。</li>
+    </ol>
+    <ul class="plain">
+      <li><strong>ESC では止まりません。</strong>変換の取り消しに使うキーなので、そのまま書類に届きます</li>
+      <li><kbd>⌥⌘R</kbd> はキー入力の札には出ません</li>
+      <li>台本エディタを閉じたままでも <kbd>⌥⌘R</kbd> で撮れます。撮り終えると、トリミング画面を出すために台本エディタが開きます</li>
     </ul>
 
     <h3>背景を付ける</h3>
@@ -504,8 +519,8 @@ chinihatarakebakadogatatu.{space}{enter}</code></pre>
           <tr><td><kbd>⌥⌘P</kbd></td><td>台本エディタを開く(デモ &gt; 台本エディタ…)</td></tr>
           <tr><td><kbd>ESC</kbd></td><td>再生を止める</td></tr>
           <tr><td><kbd>⌥⌘.</kbd></td><td>再生を止める(デモ &gt; 停止)</td></tr>
-          <tr><td><kbd>⌥⌘R</kbd></td><td>録画だけ止める(デモ &gt; 録画停止)</td></tr>
-          <tr><td><kbd>⌘Z</kbd></td><td>「再生前に本文を消去」で消えた本文を戻す</td></tr>
+          <tr><td><kbd>⌥⌘R</kbd></td><td>手打ちの録画を始める / 録画を止める(デモ &gt; 手打ちで録画・録画停止)</td></tr>
+          <tr><td><kbd>⌘Z</kbd></td><td>「開始前に本文を消去」で消えた本文を戻す</td></tr>
         </tbody>
       </table>
     </div>

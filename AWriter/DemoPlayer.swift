@@ -214,7 +214,7 @@ final class DemoPlayer: ObservableObject {
     // MARK: - 補助
 
     /// 再撮り用に本文を空にする。通常の編集として行うので ⌘Z で元に戻せる。
-    private static func clearDocument(_ textView: NSTextView) {
+    static func clearDocument(_ textView: NSTextView) {
         let range = NSRange(location: 0, length: (textView.string as NSString).length)
         guard range.length > 0, textView.shouldChangeText(in: range, replacementString: "") else {
             return
@@ -226,8 +226,14 @@ final class DemoPlayer: ObservableObject {
     /// 最前面の「書類ウィンドウ」(AWTextView を含むウィンドウ)を探して前面化する。
     /// 台本エディタなど他のウィンドウから再生しても、打鍵は書類に届く。
     private func targetTextView() -> NSTextView? {
+        Self.focusDocument()
+    }
+
+    /// 書類ウィンドウを前面に出して本文にフォーカスを渡す。手動録画でも使う。
+    @discardableResult
+    static func focusDocument() -> NSTextView? {
         for window in NSApp.orderedWindows {
-            guard let textView = Self.findTextView(in: window.contentView) else { continue }
+            guard let textView = findTextView(in: window.contentView) else { continue }
             window.makeKeyAndOrderFront(nil)
             window.makeFirstResponder(textView)
             return textView

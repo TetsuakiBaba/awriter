@@ -100,7 +100,9 @@ struct ScriptEditorView: View {
                 Text(player.phase.isActive ? player.phase.headline : "録画中")
                     .font(.system(size: 13, weight: .semibold))
                     .monospacedDigit()
-                Text("キーボードとマウスに触れないでください")
+                Text(recorder.isManual
+                     ? "書類ウィンドウに打ってください。⌥⌘R で停止"
+                     : "キーボードとマウスに触れないでください")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -158,9 +160,17 @@ struct ScriptEditorView: View {
             .disabled(isBusy)
             .help("書類ウィンドウを録画しながら再生し、終わったらトリミング画面を開く")
 
-            Toggle("再生前に本文を消去", isOn: $clearsBeforePlay)
+            Button {
+                Task { await WindowRecorder.shared.startManual(clearingDocument: clearsBeforePlay) }
+            } label: {
+                Label("手打ちで録画", systemImage: "character.cursor.ibeam")
+            }
+            .disabled(isBusy)
+            .help("台本を使わず、書類ウィンドウに自分で打つところを録画する(⌥⌘R で開始・停止)")
+
+            Toggle("開始前に本文を消去", isOn: $clearsBeforePlay)
                 .disabled(isBusy)
-                .help("再生・録画のどちらもこの設定に従う。消去は ⌘Z で元に戻せる")
+                .help("再生・録画・手打ちの録画のどれもこの設定に従う。消去は ⌘Z で元に戻せる")
 
             Divider().frame(height: 18)
 

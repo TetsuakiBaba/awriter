@@ -69,6 +69,12 @@ struct EditorView: View {
                 }
             }
         }
+        .onReceive(WindowRecorder.shared.$finished) { recording in
+            // トリミング画面は台本エディタに出る。⌥⌘R の手打ち録画は台本エディタを
+            // 閉じたままでも撮れるので、撮り終えたら開いて(前に出して)見せる。
+            guard recording != nil else { return }
+            openWindow(id: AWriterApp.scriptWindowID)
+        }
         .onAppear {
             guard !hasOpenedScriptEditor else { return }
             hasOpenedScriptEditor = true

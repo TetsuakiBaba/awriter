@@ -61,6 +61,9 @@ final class WindowRecorder: NSObject, ObservableObject {
 
     @Published private(set) var phase: Phase = .idle
     @Published var finished: Recording?
+    /// 台本を使わず、人が書類ウィンドウに直接打つのを撮っているか。
+    /// HUD とバナーの文言、停止の手段(ESC は IME の取り消しに使うので止めない)が変わる。
+    @Published private(set) var isManual = false
 
     private var stream: SCStream?
     private var sink: FrameSink?
@@ -94,6 +97,43 @@ final class WindowRecorder: NSObject, ObservableObject {
             phase = .idle
             unlockWindowSize()
             throw error
+        }
+    }
+
+    /// 手動録画。録画を回してから書類ウィンドウにフォーカスを渡し、あとは人が打つ。
+    /// 止めるのは ⌥⌘R(デモ > 録画停止)・HUD・台本エディタのバナーの停止ボタン。
+    /// 失敗したときの案内もここで出すので、呼び出し側は投げっぱなしでよい。
+    func startManual(clearingDocument: Bool) async {
+        guard phase == .idle, !DemoPlayer.shared.phase.isActive else { return }
+        // 先に消しておくと、録画の 1 フレーム目から白紙で始まる(消去は ⌘Z で戻せる)
+        if clearingDocument, let textView = DemoPlayer.focusDocument() {
+            DemoPlayer.clearDocument(textView)
+        }
+        isManual = true
+        do {
+            try await start()
+        } catch RecorderError.notAuthorized {
+            isManual = false
+            presentAuthorizationAlert()
+            return
+        } catch {
+            isManual = false
+            presentAlert("録画を開始できませんでした", error.localizedDescription)
+            return
+        }
+        DemoPlayer.focusDocument()
+        PlaybackHUD.show()
+    }
+
+    /// ⌥⌘R の中身。止まっていれば手動録画を始め、回っていれば止める。
+    func toggleManual(clearingDocument: Bool) {
+        switch phase {
+        case .idle:
+            Task { await startManual(clearingDocument: clearingDocument) }
+        case .recording:
+            Task { await stop() }
+        case .preparing, .finishing:
+            break
         }
     }
 
@@ -187,7 +227,7 @@ final class WindowRecorder: NSObject, ObservableObject {
     // MARK: - 停止
 
     /// 録画を止めて mp4 を確定させ、`finished` に結果を載せる。
-    /// 再生の終了(完走 / 停止ボタン / ESC)から呼ばれる。
+    /// 再生の終了(完走 / 停止ボタン / ESC)と、手動録画の停止から呼ばれる。
     func stop() async {
         guard case .recording = phase, let stream, let sink, let url = outputURL else { return }
         phase = .finishing
@@ -195,6 +235,10 @@ final class WindowRecorder: NSObject, ObservableObject {
         self.sink = nil
         self.outputURL = nil
         unlockWindowSize()
+        if isManual {
+            isManual = false
+            PlaybackHUD.hide()
+        }
 
         try? await stream.stopCapture()
         let duration = await sink.finish()
